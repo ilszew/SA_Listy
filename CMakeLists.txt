@@ -3,4 +3,7 @@ project(SD_Listy)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(SD_Listy main.cpp)
+add_executable(SD_Listy main.cpp
+        singlyLinkedList.h
+        doublyLinkedList.h
+        arrayList.h)
