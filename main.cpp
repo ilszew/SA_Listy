@@ -1,6 +1,6 @@
 #include <iostream>
 #include "singlyLinkedList.h"
-
+#include "arrayList.h"
 
 int main() {
 
@@ -23,6 +23,26 @@ int main() {
     }else {
         std::cout <<"Nie";
     }
+    ArrayList<int> arrayList;
+    arrayList.DodajK(10);
+    arrayList.DodajK(20);
+    arrayList.DodajP(5);
+    arrayList.DodajLos(2, 15);
+    std::cout << "ArrayList: rozmiar = " << arrayList.wielkosc() << std::endl;
+    arrayList.wyswietl();
+    
+    arrayList.UsunP();
+    arrayList.UsunK();
+    arrayList.UsunLos(1);
+    std::cout << "Po usunieciu: rozmiar = " << arrayList.wielkosc() << std::endl;
+    arrayList.wyswietl();
 
+    std::cout << "Czy 10 jest na liscie? " << std::endl;
+    if (arrayList.Szukaj(10)) {
+        std::cout << "Tak";
+    }
+    else {
+        std::cout << "Nie";
+    }
     return 0;
 }
