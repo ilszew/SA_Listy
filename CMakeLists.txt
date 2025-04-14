@@ -6,4 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 add_executable(SD_Listy main.cpp
         singlyLinkedList.h
         doublyLinkedList.h
-        arrayList.h)
+        arrayList.h
+        timer.h
+        randomGenerator.h
+        performanceTester.h)
