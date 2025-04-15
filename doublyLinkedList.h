@@ -3,13 +3,13 @@
 
 template <typename T>
 class DoublyLinkedList {
-private:
+protected:
     struct Node {
         T data;
         Node* prev;
         Node* next;
 
-        Node(const T& value) : data(value), prev(nullptr), next(nullptr) {}
+        explicit Node(const T& value) : data(value), prev(nullptr), next(nullptr) {}
     };
 
     Node* head;
@@ -51,6 +51,34 @@ public:
         size++;
     }
 
+    void insertAt(int index, const T& value) {
+        if (index < 0 || index > size) {
+            throw std::out_of_range("Index out of range");
+        }
+
+        if (index == 0) {
+            pushFront(value);
+            return;
+        }
+
+        if (index == size) {
+            pushBack(value);
+            return;
+        }
+
+        Node* current = head;
+        for (int i = 0; i < index; i++) {
+            current = current->next;
+        }
+
+        Node* newNode = new Node(value);
+        newNode->prev = current->prev;
+        newNode->next = current;
+        current->prev->next = newNode;
+        current->prev = newNode;
+        size++;
+    }
+
     void popFront() {
         if (head == nullptr) return;
 
@@ -67,7 +95,6 @@ public:
         size--;
     }
 
-    // Usuń element z końca listy
     void popBack() {
         if (tail == nullptr) return;
 
@@ -84,6 +111,47 @@ public:
         size--;
     }
 
+    void removeAt(int index) {
+        if (index < 0 || index >= size) {
+            throw std::out_of_range("Index out of range");
+        }
+
+        if (index == 0) {
+            popFront();
+            return;
+        }
+
+        if (index == size - 1) {
+            popBack();
+            return;
+        }
+
+        Node* current = head;
+        for (int i = 0; i < index; i++) {
+            current = current->next;
+        }
+
+        current->prev->next = current->next;
+        current->next->prev = current->prev;
+        delete current;
+        size--;
+    }
+
+    int search(const T& value) const {
+        Node* current = head;
+        int index = 0;
+
+        while (current != nullptr) {
+            if (current->data == value) {
+                return index;
+            }
+            current = current->next;
+            index++;
+        }
+
+        return -1;
+    }
+
     void clear() {
         while (head != nullptr) {
             Node* temp = head;
@@ -95,11 +163,11 @@ public:
         size = 0;
     }
 
-    bool isEmpty() const {
+    [[nodiscard]] bool isEmpty() const {
         return size == 0;
     }
 
-    int getSize() const {
+    [[nodiscard]] int getSize() const {
         return size;
     }
 
@@ -113,8 +181,6 @@ public:
         }
         std::cout << std::endl;
     }
-
 };
-
 
 #endif //DOUBLYLINKEDLIST_H

@@ -187,7 +187,7 @@ public:
         double addRandomTime = timer.stopTimer();
         addRandomResults[1][sizeIndex] += addRandomTime;
 
-        std::vector<int> searchValues = generateRandomData(100); // Generate 100 random values to search for
+        std::vector<int> searchValues = generateRandomData(100);
         timer.startTimer();
         for (const auto& value : searchValues) {
             list.search(value);
@@ -259,7 +259,30 @@ public:
         double addLastTime = timer.stopTimer();
         addLastResults[2][sizeIndex] += addLastTime;
 
-        addRandomResults[2][sizeIndex] += 0;
+        DoublyLinkedList<int> randomList;
+        for (const auto& value : data) {
+            randomList.pushBack(value);
+        }
+
+        timer.startTimer();
+        for (size_t i = 0; i < data.size(); i++) {
+            int randomIndex = rng.getRandomIndex(static_cast<int>(i) + 1);
+            try {
+                randomList.insertAt(randomIndex, data[i]);
+            } catch (const std::out_of_range&) {
+                // Handle exception if needed
+            }
+        }
+        double addRandomTime = timer.stopTimer();
+        addRandomResults[2][sizeIndex] += addRandomTime;
+
+        std::vector<int> searchValues = generateRandomData(100);
+        timer.startTimer();
+        for (const auto& value : searchValues) {
+            list.search(value);
+        }
+        double searchTime = timer.stopTimer();
+        searchResults[2][sizeIndex] += searchTime;
 
         timer.startTimer();
         for (size_t i = 0; i < data.size() && !list.isEmpty(); i++) {
@@ -280,9 +303,21 @@ public:
         double removeLastTime = timer.stopTimer();
         removeLastResults[2][sizeIndex] += removeLastTime;
 
-        removeRandomResults[2][sizeIndex] += 0;
+        list = DoublyLinkedList<int>();
+        for (const auto& value : data) {
+            list.pushBack(value);
+        }
 
-        searchResults[2][sizeIndex] += 0;
+        timer.startTimer();
+        for (size_t i = 0; i < data.size() && !list.isEmpty(); i++) {
+            try {
+                int randomIndex = rng.getRandomIndex(list.getSize());
+                list.removeAt(randomIndex);
+            } catch (const std::out_of_range&) {
+            }
+        }
+        double removeRandomTime = timer.stopTimer();
+        removeRandomResults[2][sizeIndex] += removeRandomTime;
     }
 
     void calculateAverages(size_t sizeIndex) {
@@ -296,7 +331,6 @@ public:
             searchResults[structIndex][sizeIndex] /= numRepeats;
         }
     }
-
 
     void printResults() const {
         std::cout << "\n===== WYNIKI WYDAJNOSCI =====\n" << std::endl;
@@ -324,6 +358,5 @@ public:
         std::cout << std::endl;
     }
 };
-
 
 #endif //PERFORMANCETESTER_H

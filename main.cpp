@@ -11,10 +11,10 @@ int main() {
         std::cout << size << " ";
     }
 
-    PerformanceTester tester(testSizes, iloscTestow);
-    tester.runAllTests();
+    PerformanceTester tests(testSizes, iloscTestow);
+    tests.runAllTests();
 
-    tester.printResults();
+    tests.printResults();
 
     std::cout << "Testy zakonczone pomyslnie" << std::endl;
 

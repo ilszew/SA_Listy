@@ -4,7 +4,7 @@
 template <typename T>
 
 class ArrayList {
-private:
+protected:
 	T* dane;
 	int maxroz;
 	int roz;
