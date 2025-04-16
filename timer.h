@@ -23,7 +23,7 @@ public:
         if (!running) return 0.0;
         end = std::chrono::high_resolution_clock::now();
         running = false;
-        return std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0; // Return time in milliseconds
+        return std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
     }
 };
 

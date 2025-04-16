@@ -12,20 +12,21 @@
 
 // klasa testowa
 class PerformanceTester {
-protected:
+private:
     Timer timer;
     RandomGenerator rng;
     std::vector<int> testSizes;
     int numRepeats;
     static constexpr int numDataStructures = 3;
+    static constexpr int numSeeds = 3;
 
-    std::vector<std::vector<double>> addFirstResults;
-    std::vector<std::vector<double>> addLastResults;
-    std::vector<std::vector<double>> addRandomResults;
-    std::vector<std::vector<double>> removeFirstResults;
-    std::vector<std::vector<double>> removeLastResults;
-    std::vector<std::vector<double>> removeRandomResults;
-    std::vector<std::vector<double>> searchResults;
+    std::vector<std::vector<std::vector<double>>> addFirstResults;
+    std::vector<std::vector<std::vector<double>>> addLastResults;
+    std::vector<std::vector<std::vector<double>>> addRandomResults;
+    std::vector<std::vector<std::vector<double>>> removeFirstResults;
+    std::vector<std::vector<std::vector<double>>> removeLastResults;
+    std::vector<std::vector<std::vector<double>>> removeRandomResults;
+    std::vector<std::vector<std::vector<double>>> searchResults;
 
     std::vector<int> generateRandomData(int size) {
         std::vector<int> data;
@@ -39,38 +40,45 @@ protected:
 public:
     PerformanceTester(const std::vector<int>& sizes, int repeats)
         : testSizes(sizes), numRepeats(repeats) {
-        addFirstResults.resize(numDataStructures, std::vector<double>(testSizes.size(), 0.0));
-        addLastResults.resize(numDataStructures, std::vector<double>(testSizes.size(), 0.0));
-        addRandomResults.resize(numDataStructures, std::vector<double>(testSizes.size(), 0.0));
-        removeFirstResults.resize(numDataStructures, std::vector<double>(testSizes.size(), 0.0));
-        removeLastResults.resize(numDataStructures, std::vector<double>(testSizes.size(), 0.0));
-        removeRandomResults.resize(numDataStructures, std::vector<double>(testSizes.size(), 0.0));
-        searchResults.resize(numDataStructures, std::vector<double>(testSizes.size(), 0.0));
+        addFirstResults.resize(numDataStructures, std::vector<std::vector<double>>(testSizes.size(), std::vector<double>(numSeeds, 0.0)));
+        addLastResults.resize(numDataStructures, std::vector<std::vector<double>>(testSizes.size(), std::vector<double>(numSeeds, 0.0)));
+        addRandomResults.resize(numDataStructures, std::vector<std::vector<double>>(testSizes.size(), std::vector<double>(numSeeds, 0.0)));
+        removeFirstResults.resize(numDataStructures, std::vector<std::vector<double>>(testSizes.size(), std::vector<double>(numSeeds, 0.0)));
+        removeLastResults.resize(numDataStructures, std::vector<std::vector<double>>(testSizes.size(), std::vector<double>(numSeeds, 0.0)));
+        removeRandomResults.resize(numDataStructures, std::vector<std::vector<double>>(testSizes.size(), std::vector<double>(numSeeds, 0.0)));
+        searchResults.resize(numDataStructures, std::vector<std::vector<double>>(testSizes.size(), std::vector<double>(numSeeds, 0.0)));
     }
 
     void runAllTests() {
-        for (size_t i = 0; i < testSizes.size(); i++) {
-            int size = testSizes[i];
-            std::cout << "Testy dla rozmiaru: " << size << std::endl;
+        const std::vector<unsigned int>& seeds = RandomGenerator::getDefaultSeeds();
 
-            for (int repeat = 0; repeat < numRepeats; repeat++) {
-                std::cout << "  Powtorzenie " << repeat + 1 << "/" << numRepeats << "..." << std::endl;
+        for (size_t seedIdx = 0; seedIdx < numSeeds; seedIdx++) {
+            unsigned int currentSeed = seeds[seedIdx];
+            std::cout << "\n========= Testy dla seed: " << currentSeed << " =========\n" << std::endl;
+            rng.setSeed(currentSeed);
 
-                std::vector<int> randomData = generateRandomData(size);
+            for (size_t i = 0; i < testSizes.size(); i++) {
+                int size = testSizes[i];
+                std::cout << "Testy dla rozmiaru: " << size << std::endl;
 
-                testArrayList(randomData, i);
+                for (int repeat = 0; repeat < numRepeats; repeat++) {
+                    std::cout << "  Powtorzenie " << repeat + 1 << "/" << numRepeats << "..." << std::endl;
 
-                testSinglyLinkedList(randomData, i);
+                    std::vector<int> randomData = generateRandomData(size);
 
-                testDoublyLinkedList(randomData, i);
+                    testArrayList(randomData, i, seedIdx);
+
+                    testSinglyLinkedList(randomData, i, seedIdx);
+
+                    testDoublyLinkedList(randomData, i, seedIdx);
+                }
+
+                calculateAverages(i, seedIdx);
             }
-
-            calculateAverages(i);
         }
-
     }
 
-    void testArrayList(const std::vector<int>& data, size_t sizeIndex) {
+    void testArrayList(const std::vector<int>& data, size_t sizeIndex, size_t seedIndex) {
         ArrayList<int> list;
 
         timer.startTimer();
@@ -78,7 +86,7 @@ public:
             list.DodajP(value);
         }
         double addFirstTime = timer.stopTimer();
-        addFirstResults[0][sizeIndex] += addFirstTime;
+        addFirstResults[0][sizeIndex][seedIndex] += addFirstTime;
 
         list = ArrayList<int>();
 
@@ -87,7 +95,7 @@ public:
             list.DodajK(value);
         }
         double addLastTime = timer.stopTimer();
-        addLastResults[0][sizeIndex] += addLastTime;
+        addLastResults[0][sizeIndex][seedIndex] += addLastTime;
 
         ArrayList<int> randomList;
         for (const auto& value : data) {
@@ -100,7 +108,7 @@ public:
             randomList.DodajLos(randomIndex, data[i]);
         }
         double addRandomTime = timer.stopTimer();
-        addRandomResults[0][sizeIndex] += addRandomTime;
+        addRandomResults[0][sizeIndex][seedIndex] += addRandomTime;
 
         std::vector<int> searchValues = generateRandomData(100);
         timer.startTimer();
@@ -108,7 +116,7 @@ public:
             list.Szukaj(value);
         }
         double searchTime = timer.stopTimer();
-        searchResults[0][sizeIndex] += searchTime;
+        searchResults[0][sizeIndex][seedIndex] += searchTime;
 
         timer.startTimer();
         for (size_t i = 0; i < data.size() && list.wielkosc() > 0; i++) {
@@ -119,7 +127,7 @@ public:
             }
         }
         double removeFirstTime = timer.stopTimer();
-        removeFirstResults[0][sizeIndex] += removeFirstTime;
+        removeFirstResults[0][sizeIndex][seedIndex] += removeFirstTime;
 
         list = ArrayList<int>();
         for (const auto& value : data) {
@@ -135,7 +143,7 @@ public:
             }
         }
         double removeLastTime = timer.stopTimer();
-        removeLastResults[0][sizeIndex] += removeLastTime;
+        removeLastResults[0][sizeIndex][seedIndex] += removeLastTime;
 
         list = ArrayList<int>();
         for (const auto& value : data) {
@@ -152,10 +160,10 @@ public:
             }
         }
         double removeRandomTime = timer.stopTimer();
-        removeRandomResults[0][sizeIndex] += removeRandomTime;
+        removeRandomResults[0][sizeIndex][seedIndex] += removeRandomTime;
     }
 
-    void testSinglyLinkedList(const std::vector<int>& data, size_t sizeIndex) {
+    void testSinglyLinkedList(const std::vector<int>& data, size_t sizeIndex, size_t seedIndex) {
         SinglyLinkedList<int> list;
 
         timer.startTimer();
@@ -163,7 +171,7 @@ public:
             list.addFirst(value);
         }
         double addFirstTime = timer.stopTimer();
-        addFirstResults[1][sizeIndex] += addFirstTime;
+        addFirstResults[1][sizeIndex][seedIndex] += addFirstTime;
 
         list = SinglyLinkedList<int>(); // Reset list
 
@@ -172,7 +180,7 @@ public:
             list.addLast(value);
         }
         double addLastTime = timer.stopTimer();
-        addLastResults[1][sizeIndex] += addLastTime;
+        addLastResults[1][sizeIndex][seedIndex] += addLastTime;
 
         SinglyLinkedList<int> randomList;
         for (const auto& value : data) {
@@ -185,7 +193,7 @@ public:
             randomList.addAt(randomIndex, data[i]);
         }
         double addRandomTime = timer.stopTimer();
-        addRandomResults[1][sizeIndex] += addRandomTime;
+        addRandomResults[1][sizeIndex][seedIndex] += addRandomTime;
 
         std::vector<int> searchValues = generateRandomData(100);
         timer.startTimer();
@@ -193,7 +201,7 @@ public:
             list.search(value);
         }
         double searchTime = timer.stopTimer();
-        searchResults[1][sizeIndex] += searchTime;
+        searchResults[1][sizeIndex][seedIndex] += searchTime;
 
         timer.startTimer();
         for (size_t i = 0; i < data.size() && list.getSize() > 0; i++) {
@@ -204,7 +212,7 @@ public:
             }
         }
         double removeFirstTime = timer.stopTimer();
-        removeFirstResults[1][sizeIndex] += removeFirstTime;
+        removeFirstResults[1][sizeIndex][seedIndex] += removeFirstTime;
 
         list = SinglyLinkedList<int>();
         for (const auto& value : data) {
@@ -220,7 +228,7 @@ public:
             }
         }
         double removeLastTime = timer.stopTimer();
-        removeLastResults[1][sizeIndex] += removeLastTime;
+        removeLastResults[1][sizeIndex][seedIndex] += removeLastTime;
 
         list = SinglyLinkedList<int>();
         for (const auto& value : data) {
@@ -237,10 +245,10 @@ public:
             }
         }
         double removeRandomTime = timer.stopTimer();
-        removeRandomResults[1][sizeIndex] += removeRandomTime;
+        removeRandomResults[1][sizeIndex][seedIndex] += removeRandomTime;
     }
 
-    void testDoublyLinkedList(const std::vector<int>& data, size_t sizeIndex) {
+    void testDoublyLinkedList(const std::vector<int>& data, size_t sizeIndex, size_t seedIndex) {
         DoublyLinkedList<int> list;
 
         timer.startTimer();
@@ -248,7 +256,7 @@ public:
             list.pushFront(value);
         }
         double addFirstTime = timer.stopTimer();
-        addFirstResults[2][sizeIndex] += addFirstTime;
+        addFirstResults[2][sizeIndex][seedIndex] += addFirstTime;
 
         list = DoublyLinkedList<int>();
 
@@ -257,7 +265,7 @@ public:
             list.pushBack(value);
         }
         double addLastTime = timer.stopTimer();
-        addLastResults[2][sizeIndex] += addLastTime;
+        addLastResults[2][sizeIndex][seedIndex] += addLastTime;
 
         DoublyLinkedList<int> randomList;
         for (const auto& value : data) {
@@ -270,11 +278,10 @@ public:
             try {
                 randomList.insertAt(randomIndex, data[i]);
             } catch (const std::out_of_range&) {
-                // Handle exception if needed
             }
         }
         double addRandomTime = timer.stopTimer();
-        addRandomResults[2][sizeIndex] += addRandomTime;
+        addRandomResults[2][sizeIndex][seedIndex] += addRandomTime;
 
         std::vector<int> searchValues = generateRandomData(100);
         timer.startTimer();
@@ -282,14 +289,14 @@ public:
             list.search(value);
         }
         double searchTime = timer.stopTimer();
-        searchResults[2][sizeIndex] += searchTime;
+        searchResults[2][sizeIndex][seedIndex] += searchTime;
 
         timer.startTimer();
         for (size_t i = 0; i < data.size() && !list.isEmpty(); i++) {
             list.popFront();
         }
         double removeFirstTime = timer.stopTimer();
-        removeFirstResults[2][sizeIndex] += removeFirstTime;
+        removeFirstResults[2][sizeIndex][seedIndex] += removeFirstTime;
 
         list = DoublyLinkedList<int>();
         for (const auto& value : data) {
@@ -301,7 +308,7 @@ public:
             list.popBack();
         }
         double removeLastTime = timer.stopTimer();
-        removeLastResults[2][sizeIndex] += removeLastTime;
+        removeLastResults[2][sizeIndex][seedIndex] += removeLastTime;
 
         list = DoublyLinkedList<int>();
         for (const auto& value : data) {
@@ -317,23 +324,32 @@ public:
             }
         }
         double removeRandomTime = timer.stopTimer();
-        removeRandomResults[2][sizeIndex] += removeRandomTime;
+        removeRandomResults[2][sizeIndex][seedIndex] += removeRandomTime;
     }
 
-    void calculateAverages(size_t sizeIndex) {
+    void calculateAverages(size_t sizeIndex, size_t seedIndex) {
         for (size_t structIndex = 0; structIndex < numDataStructures; structIndex++) {
-            addFirstResults[structIndex][sizeIndex] /= numRepeats;
-            addLastResults[structIndex][sizeIndex] /= numRepeats;
-            addRandomResults[structIndex][sizeIndex] /= numRepeats;
-            removeFirstResults[structIndex][sizeIndex] /= numRepeats;
-            removeLastResults[structIndex][sizeIndex] /= numRepeats;
-            removeRandomResults[structIndex][sizeIndex] /= numRepeats;
-            searchResults[structIndex][sizeIndex] /= numRepeats;
+            addFirstResults[structIndex][sizeIndex][seedIndex] /= numRepeats;
+            addLastResults[structIndex][sizeIndex][seedIndex] /= numRepeats;
+            addRandomResults[structIndex][sizeIndex][seedIndex] /= numRepeats;
+            removeFirstResults[structIndex][sizeIndex][seedIndex] /= numRepeats;
+            removeLastResults[structIndex][sizeIndex][seedIndex] /= numRepeats;
+            removeRandomResults[structIndex][sizeIndex][seedIndex] /= numRepeats;
+            searchResults[structIndex][sizeIndex][seedIndex] /= numRepeats;
         }
     }
 
+    [[nodiscard]] static double calculateOverallAverage(const std::vector<std::vector<std::vector<double>>>& results,
+                                   size_t structIndex, size_t sizeIndex) {
+        double sum = 0.0;
+        for (size_t seedIndex = 0; seedIndex < numSeeds; seedIndex++) {
+            sum += results[structIndex][sizeIndex][seedIndex];
+        }
+        return sum / numSeeds;
+    }
+
     void printResults() const {
-        std::cout << "\n===== WYNIKI WYDAJNOSCI =====\n" << std::endl;
+        std::cout << "\n===== WYNIKI WYDAJNOSCI (średnia z " << numSeeds << " seedów) =====\n" << std::endl;
 
         printOperationResults("Dodawanie na poczatku (ms)", addFirstResults);
         printOperationResults("Dodawanie na koncu (ms)", addLastResults);
@@ -342,20 +358,45 @@ public:
         printOperationResults("Usuwanie z konca (ms)", removeLastResults);
         printOperationResults("Usuwanie z losowych miejsc (ms)", removeRandomResults);
         printOperationResults("Szukanie (ms)", searchResults);
+
+        printDetailedResults();
     }
 
-    void printOperationResults(const std::string& operationName, const std::vector<std::vector<double>>& results) const {
+    void printOperationResults(const std::string& operationName,
+                              const std::vector<std::vector<std::vector<double>>>& results) const {
         std::cout << operationName << ":" << std::endl;
-        std::cout << std::setw(10) << "Wielkosc" << std::setw(15) << "ArrayList" << std::setw(20) << "SinglyLinkedList" << std::setw(20) << "DoublyLinkedList" << std::endl;
+        std::cout << std::setw(10) << "Wielkosc" << std::setw(15) << "ArrayList"
+                  << std::setw(20) << "SinglyLinkedList" << std::setw(20) << "DoublyLinkedList" << std::endl;
 
         for (size_t i = 0; i < testSizes.size(); i++) {
             std::cout << std::setw(10) << testSizes[i];
-            for (size_t j = 0; j < results.size(); j++) {
-                std::cout << std::setw(j == 0 ? 15 : 20) << std::fixed << std::setprecision(4) << results[j][i];
+            for (size_t j = 0; j < numDataStructures; j++) {
+                std::cout << std::setw(j == 0 ? 15 : 20) << std::fixed << std::setprecision(4)
+                          << calculateOverallAverage(results, j, i);
             }
             std::cout << std::endl;
         }
         std::cout << std::endl;
+    }
+
+    void printDetailedResults() const {
+        const std::vector<unsigned int>& seeds = RandomGenerator::getDefaultSeeds();
+        const std::vector<std::string> dataStructures = {"ArrayList", "SinglyLinkedList", "DoublyLinkedList"};
+        const std::vector<std::string> operations = {
+            "Dodawanie na poczatku (ms)",
+            "Dodawanie na koncu (ms)",
+            "Dodawanie w losowych miejcach (ms)",
+            "Usuwanie z poczatku (ms)",
+            "Usuwanie z konca (ms)",
+            "Usuwanie z losowych miejsc (ms)",
+            "Szukanie (ms)"
+        };
+
+        const std::vector<std::vector<std::vector<std::vector<double>>>> allResults = {
+            addFirstResults, addLastResults, addRandomResults,
+            removeFirstResults, removeLastResults, removeRandomResults,
+            searchResults
+        };
     }
 };
 
